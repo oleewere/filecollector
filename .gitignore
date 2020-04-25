@@ -129,8 +129,7 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-example/files/tmp
-example/files/*.zip
-example/files/**/example.txt
+example/files
+
 .idea
 .DS_Store
