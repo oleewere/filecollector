@@ -8,5 +8,6 @@ collector:
     rules:
     - pattern:  \d{4}[^\w]\d{4}[^\w]\d{4}[^\w]\d{4}
       replacement: "[REDACTED]"
-    outputScript: 
+    processFileScript: example/scripts/process_file.sh
+    outputScript: example/scripts/output_file.sh
     outputLocation: "example/files"

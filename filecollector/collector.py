@@ -10,6 +10,7 @@ import tarfile
 import fileinput
 import re
 import zipfile
+import subprocess
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -26,6 +27,7 @@ def main():
         if "collector" in config:
             outputLocation=config["collector"]["outputLocation"]
             outputScript=config["collector"]["outputScript"]
+            processFileScript=config["collector"]["processFileScript"]
             files=config["collector"]["files"]
             now = datetime.datetime.today() 
             nTime = now.strftime("%Y-%m-%d-%h-%M-%S-%f")
@@ -45,11 +47,13 @@ def main():
                             for rule in config["collector"]["rules"]:
                                 line = re.sub(rule["pattern"], rule["replacement"], line.rstrip())
                                 print(line)
+                    if processFileScript:
+                        subprocess.call([processFileScript, fileObject["path"], fileObject["label"]])
             output_file=os.path.join(outputLocation, nTime + ".zip")
             make_archive(tmp_folder, output_file)
             shutil.rmtree(os.path.join(outputLocation, "tmp"))
             if outputScript:
-                pass            
+                subprocess.call([outputScript, output_file])         
 
 def make_archive(source, destination):
     base = os.path.basename(destination)
