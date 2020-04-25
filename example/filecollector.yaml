@@ -1,0 +1,12 @@
+server:
+    port: 1999
+    folder: "../example/files" 
+collector:
+    files:
+    - path: "example/example*.txt"
+      label: "example"
+    rules:
+    - pattern:  \d{4}[^\w]\d{4}[^\w]\d{4}[^\w]\d{4}
+      replacement: "[REDACTED]"
+    outputScript: 
+    outputLocation: "example/files"
