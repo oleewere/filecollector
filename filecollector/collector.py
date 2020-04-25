@@ -48,12 +48,22 @@ def main():
                                 line = re.sub(rule["pattern"], rule["replacement"], line.rstrip())
                                 print(line)
                     if processFileScript:
-                        subprocess.call([processFileScript, fileObject["path"], fileObject["label"]])
-            output_file=os.path.join(outputLocation, nTime + ".zip")
-            make_archive(tmp_folder, output_file)
-            shutil.rmtree(os.path.join(outputLocation, "tmp"))
-            if outputScript:
-                subprocess.call([outputScript, output_file])         
+                        subprocess.call([processFileScript, dest, fileObject["label"]])
+            skip_compress="compress" in config["collector"] and not bool(config["collector"]["compress"])
+            keep_processed_files="deleteProcessedTemplateFiles" in config["collector"] and not bool(config["collector"]["deleteProcessedTemplateFiles"])
+            if skip_compress:
+                print "skipping file compression"
+            else:
+                output_file=os.path.join(outputLocation, nTime + ".zip")
+                make_archive(tmp_folder, output_file)
+            
+            if keep_processed_files:
+                print "keep processed files in '%s' folder" % os.path.join(outputLocation, "tmp")
+            else:
+                shutil.rmtree(os.path.join(outputLocation, "tmp"))
+            
+            if not skip_compress and outputScript:
+                subprocess.call([outputScript, output_file])
 
 def make_archive(source, destination):
     base = os.path.basename(destination)

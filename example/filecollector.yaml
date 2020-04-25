@@ -9,5 +9,7 @@ collector:
     - pattern:  \d{4}[^\w]\d{4}[^\w]\d{4}[^\w]\d{4}
       replacement: "[REDACTED]"
     processFileScript: example/scripts/process_file.sh
+    compress: true
     outputScript: example/scripts/output_file.sh
+    deleteProcessedTemplateFiles: true
     outputLocation: "example/files"
