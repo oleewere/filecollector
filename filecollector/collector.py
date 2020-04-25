@@ -49,6 +49,10 @@ def main():
                                 print(line)
                     if processFileScript:
                         subprocess.call([processFileScript, dest, fileObject["label"]])
+            processFilesFolderScript=config["collector"]["processFilesFolderScript"] if "processFilesFolderScript" in config["collector"] else None
+            if processFilesFolderScript:
+                subprocess.call([processFilesFolderScript, tmp_folder])
+            
             skip_compress="compress" in config["collector"] and not bool(config["collector"]["compress"])
             keep_processed_files="deleteProcessedTemplateFiles" in config["collector"] and not bool(config["collector"]["deleteProcessedTemplateFiles"])
             if skip_compress:
