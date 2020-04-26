@@ -35,7 +35,6 @@ setuptools.setup(
     url="https://github.com/oleewere/filecollector",
     packages=setuptools.find_packages(),
     license='Apache 2.0',
-    packages=['PyYaml', 'pid'],
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 2",
