@@ -133,3 +133,4 @@ example/files
 
 .idea
 .DS_Store
+*.pid

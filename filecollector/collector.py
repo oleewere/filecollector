@@ -32,6 +32,7 @@ import fileinput
 import re
 import zipfile
 import subprocess
+from pid import PidFile
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -77,13 +78,13 @@ def main():
             skip_compress="compress" in config["collector"] and not bool(config["collector"]["compress"])
             keep_processed_files="deleteProcessedTemplateFiles" in config["collector"] and not bool(config["collector"]["deleteProcessedTemplateFiles"])
             if skip_compress:
-                print "skipping file compression"
+                print("skipping file compression")
             else:
                 output_file=os.path.join(outputLocation, nTime + ".zip")
                 make_archive(tmp_folder, output_file)
             
             if keep_processed_files:
-                print "keep processed files in '%s' folder" % os.path.join(outputLocation, "tmp")
+                print("keep processed files in '%s' folder" % os.path.join(outputLocation, "tmp"))
             else:
                 shutil.rmtree(os.path.join(outputLocation, "tmp"))
             
@@ -100,4 +101,6 @@ def make_archive(source, destination):
     shutil.move('%s.%s'%(name,format), destination)
 
 if __name__ == "__main__":
-    main()
+    pidfile=os.environ.get('PIDFILE', 'filecollector-collector.pid')
+    with PidFile(pidfile) as p:
+        main()

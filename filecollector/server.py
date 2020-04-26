@@ -22,8 +22,7 @@ import argparse
 import sys
 import os
 import yaml
-import SimpleHTTPServer
-import SocketServer
+from pid import PidFile
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -43,10 +42,22 @@ def main():
             if folder:
                 web_dir = os.path.join(os.path.dirname(__file__), folder)
                 os.chdir(web_dir)
-            Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
-            httpd = SocketServer.TCPServer(("", port), Handler)
-            print "serving at port", port
-            httpd.serve_forever()
+            try:
+                import http.server
+                import socketserver
+                handler = http.server.SimpleHTTPRequestHandler
+                httpd = socketserver.TCPServer(("", port), handler)
+                print("serving at port", port)
+                httpd.serve_forever()
+            except ImportError as error:
+                import SimpleHTTPServer
+                import SocketServer
+                Handler = SimpleHTTPServer.SimpleHTTPRequestHandler
+                httpd = SocketServer.TCPServer(("", port), Handler)
+                print ("serving at port", port)
+                httpd.serve_forever()
 
 if __name__ == "__main__":
-    main()
+    pidfile=os.environ.get('PIDFILE', 'filecollector-server.pid')
+    with PidFile(pidfile) as p:
+        main()
