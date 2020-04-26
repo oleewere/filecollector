@@ -58,6 +58,6 @@ def main():
                 httpd.serve_forever()
 
 if __name__ == "__main__":
-    pidfile=os.environ.get('PIDFILE', 'filecollector-server.pid')
+    pidfile=os.environ.get('FILECOLLECTOR_PIDFILE', 'filecollector-server.pid')
     with PidFile(pidfile) as p:
         main()

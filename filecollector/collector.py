@@ -101,6 +101,6 @@ def make_archive(source, destination):
     shutil.move('%s.%s'%(name,format), destination)
 
 if __name__ == "__main__":
-    pidfile=os.environ.get('PIDFILE', 'filecollector-collector.pid')
+    pidfile=os.environ.get('FILECOLLECTOR_PIDFILE', 'filecollector-collector.pid')
     with PidFile(pidfile) as p:
         main()

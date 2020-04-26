@@ -1,3 +1,146 @@
-#!/usr/bin/env python
+#!/bin/bash
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-print("Hello filecollector")
+function print_help() {
+  cat << EOF
+   Usage: filecollector <component> <command> <arguments>
+
+   Components:
+     collector                              file collector related operations
+     server                                 file collector browser/server related operations
+
+   Commands:
+     start                                  start component
+     stop                                   stop component
+   
+   Arguments:
+     -c, --config  <CONFIG>                 available migration modes: delete-only | backup-only | migrate-restore | all | transport
+     -e, --python-executable                python executable location, default: /usr/bin/python (can be python3, python2.7 etc.)
+     -p, --pid-dir                          pidfile directory location, default: /var/run
+     -h, --help                             print help
+EOF
+}
+
+function main() {
+    FILECOLLECTOR_COMPONENT="$1"
+    if [[ -z "$FILECOLLECTOR_COMPONENT" || ( "$FILECOLLECTOR_COMPONENT" != "collector" && "$FILECOLLECTOR_COMPONENT" != "server" ) ]]; then
+      echo "You need to use 'server' or 'collector' as first parameter!"
+      print_help
+      exit 1
+    fi
+    args=("$@")
+    run_command ${args[@]:1}
+}
+
+function run_command() {
+    FILECOLLECTOR_COMMAND="$1"
+    if [[ -z "$FILECOLLECTOR_COMMAND" || ( "$FILECOLLECTOR_COMMAND" != "start" && "$FILECOLLECTOR_COMMAND" != "stop" ) ]]; then
+      echo "You need to use 'start' or 'stop' command on ${FILECOLLECTOR_COMPONENT} component!"
+      print_help
+      exit 1
+    fi
+    args=("$@")
+    run_app ${args[@]:1}
+}
+
+function run_app() {
+  while [[ $# -gt 0 ]]
+    do
+      key="$1"
+      case $key in
+        -c|--config)
+          local FILECOLLECTOR_CONFIG="$2"
+          shift 2
+        ;;
+        -e|--python-executable)
+          local FILECOLLECTOR_PYTHON_PATH="$2"
+          shift 2
+        ;;
+        -p|--pid-dir)
+          local FILECOLLECTOR_PID_DIR="$2"
+          shift 2
+        ;;
+        -h|--help)
+          shift 1
+          print_help
+          exit 0
+        ;;
+        *)
+          echo "Unknown option: $1"
+          exit 1
+        ;;
+      esac
+  done
+
+  if [[ -z "$FILECOLLECTOR_CONFIG" && "$FILECOLLECTOR_COMMAND" == "start" ]] ; then
+    echo "Providing filecollector configuration is required (-c or --config)."
+    print_help
+    exit 1
+  fi
+
+  if [[ -z "$FILECOLLECTOR_PYTHON_PATH" ]] ; then
+    FILECOLLECTOR_PYTHON_PATH="/usr/bin/python"
+  fi
+
+  if [[ -z "$FILECOLLECTOR_PID_DIR" ]] ; then
+    FILECOLLECTOR_PID_DIR="/var/run"
+  fi
+
+  if [[ "$FILECOLLECTOR_COMPONENT" == "server" ]]; then
+      pidfile="$FILECOLLECTOR_PID_DIR/filecollector-server.pid"
+      start_command="${FILECOLLECTOR_PYTHON_PATH} -m filecollector.server --config ${FILECOLLECTOR_CONFIG}"
+      run_python_app "${start_command}" "${pidfile}"
+  else
+      pidfile="$FILECOLLECTOR_PID_DIR/filecollector-collector.pid"
+      start_command="${FILECOLLECTOR_PYTHON_PATH} -m filecollector.collector --config ${FILECOLLECTOR_CONFIG}"
+      run_python_app "${start_command}" "${pidfile}"
+  fi
+}
+
+function run_python_app() {
+    command_to_run=$1
+    pidfile=$2
+    if [[ -f $2 ]]; then
+      pid=$(cat ${pidfile})
+      kill -0 ${pid} 2> /dev/null
+      process_exists=$?
+      if [[ "$FILECOLLECTOR_COMMAND" == "start" ]]; then
+        if [[ "$process_exists" == "0" ]]; then
+          echo "Filecollector component '${FILECOLLECTOR_COMPONENT}' already running."
+        else
+          export FILECOLLECTOR_PIDFILE="$2"
+          nohup $command_to_run >/dev/null 2>&1 &
+        fi
+      else
+        if [[ "$process_exists" == "0" ]]; then
+          echo "Stopping filecollector component '${FILECOLLECTOR_COMPONENT}' ..."
+          kill ${pid}
+        else
+          echo "Stopping Filecollector component '${FILECOLLECTOR_COMPONENT}' already stopped."
+        fi
+      fi
+    else
+      if [[ "$FILECOLLECTOR_COMMAND" == "stop" ]]; then
+        echo "Stopping Filecollector component '${FILECOLLECTOR_COMPONENT}' already stopped."
+      else
+        export FILECOLLECTOR_PIDFILE="$2"
+        nohup $command_to_run >/dev/null 2>&1 &
+      fi
+    fi
+}
+
+
+main ${1+"$@"}
