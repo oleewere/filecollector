@@ -10,6 +10,7 @@ collector:
       replacement: "[REDACTED]"
     processFileScript: example/scripts/process_file.sh
     compress: true
+    useFullPath: true
     outputScript: example/scripts/output_file.sh
     processFilesFolderScript: example/scripts/tmp_folder.sh
     deleteProcessedTemplateFiles: true

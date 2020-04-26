@@ -51,6 +51,7 @@ def main():
             outputScript=config["collector"]["outputScript"]
             processFileScript=config["collector"]["processFileScript"]
             files=config["collector"]["files"]
+            useFullPath=not "useFullPath" in config["collector"] or bool(config["collector"]["useFullPath"])
             now = datetime.datetime.today() 
             nTime = now.strftime("%Y-%m-%d-%h-%M-%S-%f")
             tmp_folder=os.path.abspath(os.path.join(outputLocation, "tmp", nTime))
@@ -59,9 +60,10 @@ def main():
                     if not os.path.exists(tmp_folder):
                         os.makedirs(tmp_folder)
                     dest_folder=os.path.join(tmp_folder, fileObject["label"])
-                    if not os.path.exists(dest_folder):
-                        os.makedirs(dest_folder)
-                    dest=os.path.join(dest_folder, os.path.basename(file))
+                    dest=os.path.join(dest_folder, os.path.abspath(file).lstrip(os.sep)) if useFullPath else os.path.join(dest_folder, os.path.basename(file))
+                    dest_parent=os.path.dirname(dest) 
+                    if not os.path.exists(dest_parent):
+                        os.makedirs(dest_parent)
                     if os.path.isfile(file):
                         shutil.copy(file, dest)
                     if "rules" in config["collector"] and config["collector"]["rules"]:
