@@ -21,10 +21,15 @@
 
 import setuptools
 
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
+
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setuptools.setup(
+setup(
     name="filecollector",
     version="0.0.1",
     author="Oliver Szabo",
@@ -33,6 +38,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/oleewere/filecollector",
+    scripts=["bin/filecollector"],
     packages=setuptools.find_packages(),
     license='Apache 2.0',
     classifiers=[
