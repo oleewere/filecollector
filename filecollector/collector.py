@@ -53,7 +53,7 @@ def main():
             files=config["collector"]["files"]
             useFullPath=not "useFullPath" in config["collector"] or bool(config["collector"]["useFullPath"])
             now = datetime.datetime.today() 
-            nTime = now.strftime("%Y-%m-%d-%h-%M-%S-%f")
+            nTime = now.strftime("%Y-%m-%d-%H-%M-%S-%f")
             tmp_folder=os.path.abspath(os.path.join(outputLocation, "tmp", nTime))
             for fileObject in files:
                 for file in glob.glob(fileObject["path"]):
