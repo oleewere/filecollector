@@ -40,6 +40,7 @@ setup(
     url="https://github.com/oleewere/filecollector",
     scripts=["bin/filecollector"],
     packages=setuptools.find_packages(),
+    install_requires=['PyYAML>=5.3.1', 'psutil>=5.4.8'],
     license='Apache 2.0',
     classifiers=[
         "Programming Language :: Python",
