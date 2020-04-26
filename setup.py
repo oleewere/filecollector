@@ -26,8 +26,9 @@ try:
 except ImportError:
     from distutils.core import setup
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+def readme():
+    with open('README.md') as f:
+        return f.read()
 
 setup(
     name="filecollector",
@@ -35,7 +36,7 @@ setup(
     author="Oliver Szabo",
     author_email="oleewere@gmail.com",
     description="Simple file collector - compress/serve/send/anonymizie files",
-    long_description=long_description,
+    long_description=readme(),
     long_description_content_type="text/markdown",
     url="https://github.com/oleewere/filecollector",
     scripts=["bin/filecollector"],
