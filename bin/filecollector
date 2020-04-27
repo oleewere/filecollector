@@ -28,8 +28,9 @@ function print_help() {
    
    Arguments:
      -c, --config  <CONFIG>                 filecollector configuration (in yaml format)
-     -e, --python-executable                python executable location, default: /usr/bin/python (can be python3, python2.7 etc.)
+     -e, --python-executable                python executable location, default: python (can be python3, python2.7 /usr/bin/python etc.)
      -p, --pid-dir                          pidfile directory location, default: /var/run
+     -l, --log-dir                          out/err logfile location
      -h, --help                             print help
 EOF
 }
@@ -73,6 +74,10 @@ function run_app() {
           local FILECOLLECTOR_PID_DIR="$2"
           shift 2
         ;;
+        -l|--log-dir)
+          local FILECOLLECTOR_LOG_DIR="$2"
+          shift 2
+        ;;
         -h|--help)
           shift 1
           print_help
@@ -92,7 +97,7 @@ function run_app() {
   fi
 
   if [[ -z "$FILECOLLECTOR_PYTHON_PATH" ]] ; then
-    FILECOLLECTOR_PYTHON_PATH="/usr/bin/python"
+    FILECOLLECTOR_PYTHON_PATH="python"
   fi
 
   if [[ -z "$FILECOLLECTOR_PID_DIR" ]] ; then
@@ -100,10 +105,24 @@ function run_app() {
   fi
 
   if [[ "$FILECOLLECTOR_COMPONENT" == "server" ]]; then
+      if [[ -z "$FILECOLLECTOR_LOG_DIR" ]] ; then
+        FILECOLLECTOR_LOG_OUT="filecollector-server.out"
+        FILECOLLECTOR_LOG_ERR="filecollector-server.err"
+      else
+        FILECOLLECTOR_LOG_OUT="$FILECOLLECTOR_LOG_DIR/filecollector-server.out"
+        FILECOLLECTOR_LOG_ERR="$FILECOLLECTOR_LOG_DIR/filecollector-server.err"
+      fi
       pidfile="$FILECOLLECTOR_PID_DIR/filecollector-server.pid"
       start_command="${FILECOLLECTOR_PYTHON_PATH} -m filecollector.server --config ${FILECOLLECTOR_CONFIG}"
       run_python_app "${start_command}" "${pidfile}"
   else
+      if [[ -z "$FILECOLLECTOR_LOG_DIR" ]] ; then
+        FILECOLLECTOR_LOG_OUT="filecollector-collector.out"
+        FILECOLLECTOR_LOG_ERR="filecollector-collector.err"
+      else
+        FILECOLLECTOR_LOG_OUT="$FILECOLLECTOR_LOG_DIR/filecollector-server.out"
+        FILECOLLECTOR_LOG_ERR="$FILECOLLECTOR_LOG_DIR/filecollector-server.err"
+      fi
       pidfile="$FILECOLLECTOR_PID_DIR/filecollector-collector.pid"
       start_command="${FILECOLLECTOR_PYTHON_PATH} -m filecollector.collector --config ${FILECOLLECTOR_CONFIG}"
       run_python_app "${start_command}" "${pidfile}"
@@ -137,7 +156,7 @@ function run_python_app() {
         echo "Stopping Filecollector component '${FILECOLLECTOR_COMPONENT}' already stopped."
       else
         export FILECOLLECTOR_PIDFILE="$2"
-        nohup $command_to_run >/dev/null 2>&1 &
+        nohup $command_to_run > "$FILECOLLECTOR_LOG_OUT" 2> "$FILECOLLECTOR_LOG_ERR" &
       fi
     fi
 }
