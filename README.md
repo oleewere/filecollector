@@ -10,7 +10,7 @@ Service for collecting and processing files (with hooks)
 - collect files and compress them (on command)
 - anonymization
 - run custom scripts on output file / processed files
-- start/stop simple fileserver (on collect output location)
+- start/stop simple fileserver (at collect output location)
 
 ## Requirements
 
