@@ -97,6 +97,10 @@ List of anonymization rules that can be run against the file inputs. (`pattern` 
 
 At the end of the filecollection, the output folder is compressed. The default value is `true`.
 
+#### `collector.compressFormat`
+
+Compression format, possible values: `zip`, `tar`, `gztar`, `bztar`. Default value is `zip`.
+
 #### `collector.outputLocation`
 
 Output location (directory), where the processed file(s) will be stored.
@@ -120,7 +124,6 @@ Script that runs once with the compressed output file name as an input.
 #### `collector.deleteProcessedTemplateFiles`
 
 After collection of the files + compression, the collected files are deleted. Can be useful to disable this behaviour `compress` option is disabled. Default value is `true`.
-
 
 ## Contributing
 
