@@ -32,6 +32,7 @@ import fileinput
 import re
 import zipfile
 import subprocess
+import socket
 from pid import PidFile
 
 def parse_args():
@@ -52,9 +53,15 @@ def main():
             processFileScript=config["collector"]["processFileScript"]
             files=config["collector"]["files"]
             useFullPath=not "useFullPath" in config["collector"] or bool(config["collector"]["useFullPath"])
-            now = datetime.datetime.today() 
+            now = datetime.datetime.today()
             nTime = now.strftime("%Y-%m-%d-%H-%M-%S-%f")
-            tmp_folder=os.path.abspath(os.path.join(outputLocation, "tmp", nTime))
+            hostname=None
+            if socket.gethostname().find('.')>=0:
+                hostname=socket.gethostname()
+            else:
+                hostname=socket.gethostbyaddr(socket.gethostname())[0]
+            zipfile_name = nTime + "-" + hostname.replace(".", "-")
+            tmp_folder=os.path.abspath(os.path.join(outputLocation, "tmp", zipfile_name))
             for fileObject in files:
                 for file in glob.glob(fileObject["path"]):
                     if not os.path.exists(tmp_folder):
@@ -82,7 +89,7 @@ def main():
             if skip_compress:
                 print("skipping file compression")
             else:
-                output_file=os.path.join(outputLocation, nTime + ".zip")
+                output_file=os.path.join(outputLocation, zipfile_name + ".zip")
                 make_archive(tmp_folder, output_file)
             
             if keep_processed_files:
