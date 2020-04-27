@@ -63,7 +63,9 @@ def main():
             zipfile_name = nTime + "-" + hostname.replace(".", "-")
             tmp_folder=os.path.abspath(os.path.join(outputLocation, "tmp", zipfile_name))
             for fileObject in files:
-                for file in glob.glob(fileObject["path"]):
+                sortFilesByDate=not "sortFilesByDate" in config["collector"] or bool(config["collector"]["sortFilesByDate"])
+                files=sorted(glob.glob(fileObject["path"]), key=os.path.getmtime) if sortFilesByDate else glob.glob(fileObject["path"])
+                for file in files:
                     if not os.path.exists(tmp_folder):
                         os.makedirs(tmp_folder)
                     dest_folder=os.path.join(tmp_folder, fileObject["label"])
