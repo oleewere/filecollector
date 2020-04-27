@@ -1,6 +1,7 @@
 # filecollector
 
 ![build](https://github.com/oleewere/filecollector/workflows/build/badge.svg)
+[![PyPI version](https://badge.fury.io/py/filecollector.svg)](https://badge.fury.io/py/filecollector)
 
 Service for collecting and processing files (with hooks)
 
