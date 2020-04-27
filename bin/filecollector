@@ -27,7 +27,7 @@ function print_help() {
      stop                                   stop component
    
    Arguments:
-     -c, --config  <CONFIG>                 available migration modes: delete-only | backup-only | migrate-restore | all | transport
+     -c, --config  <CONFIG>                 filecollector configuration (in yaml format)
      -e, --python-executable                python executable location, default: /usr/bin/python (can be python3, python2.7 etc.)
      -p, --pid-dir                          pidfile directory location, default: /var/run
      -h, --help                             print help
