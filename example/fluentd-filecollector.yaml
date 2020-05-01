@@ -1,0 +1,15 @@
+collector:
+    files:
+    - path: "example/example*.txt"
+      label: "txt"
+    rules:
+    - pattern:  \d{4}[^\w]\d{4}[^\w]\d{4}[^\w]\d{4}
+      replacement: "[REDACTED]"
+    compress: false
+    useFullPath: true
+    deleteProcessedTempFilesOneByOne: true
+    outputLocation: "example/files"
+    fluentProcessor:
+      host: "localhost"
+      port: 24225
+      tag: example

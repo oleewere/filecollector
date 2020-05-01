@@ -41,7 +41,7 @@ setup(
     url="https://github.com/oleewere/filecollector",
     scripts=["bin/filecollector"],
     packages=setuptools.find_packages(),
-    install_requires=['PyYAML>=5.3.1', 'pid>=3.0.3'],
+    install_requires=['PyYAML>=5.3.1', 'pid>=3.0.3', 'fluent-logger>=0.9.6'],
     license='Apache 2.0',
     classifiers=[
         "Programming Language :: Python",

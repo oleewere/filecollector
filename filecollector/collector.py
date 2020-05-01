@@ -34,6 +34,7 @@ import zipfile
 import subprocess
 import socket
 from pid import PidFile
+from fluent_event_processor import EventProcessor
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -49,11 +50,12 @@ def main():
         config = yaml.load(file, yaml.SafeLoader)
         if "collector" in config:
             outputLocation=config["collector"]["outputLocation"]
-            outputScript=config["collector"]["outputScript"]
-            processFileScript=config["collector"]["processFileScript"]
+            outputScript=__get_str_key("outputScript", config["collector"])
+            preProcessScript=__get_str_key("preProcessScript", config["collector"])
+            processFileScript=__get_str_key("processFileScript", config["collector"])
             files=config["collector"]["files"]
-            useFullPath=not "useFullPath" in config["collector"] or bool(config["collector"]["useFullPath"])
-            compressFormat=str(config["collector"]["compressFormat"]) if "compressFormat" in config["collector"] else "zip"
+            useFullPath=__get_bool_key("useFullPath", config["collector"], True)
+            compressFormat=__get_str_key("compressFormat", config["collector"], "zip")
             now = datetime.datetime.today()
             nTime = now.strftime("%Y-%m-%d-%H-%M-%S-%f")
             hostname=None
@@ -63,6 +65,18 @@ def main():
                 hostname=socket.gethostbyaddr(socket.gethostname())[0]
             zipfile_name = nTime + "-" + hostname.replace(".", "-")
             tmp_folder=os.path.abspath(os.path.join(outputLocation, "tmp", zipfile_name))
+            if preProcessScript:
+                subprocess.call([preProcessScript, tmp_folder])
+            
+            fluentEventProcessor = None
+            if "fluentProcessor" in config["collector"]:
+                fluent_host=__get_str_key("host", config["collector"]["fluentProcessor"], "localhost")
+                fluent_port=__get_int_key("port", config["collector"]["fluentProcessor"], 24224)
+                fluent_tag=__get_str_key("tag", config["collector"]["fluentProcessor"])
+                identifier=__get_str_key("identifier", config["collector"]["fluentProcessor"])
+                message_field=__get_str_key("messageField", config["collector"]["fluentProcessor"], "message")
+                include_time=__get_bool_key("includeTime", config["collector"]["fluentProcessor"])
+                fluentEventProcessor=EventProcessor(fluent_host, int(fluent_port), fluent_tag, identifier, message_field, include_time)
             for fileObject in files:
                 sortFilesByDate=not "sortFilesByDate" in config["collector"] or bool(config["collector"]["sortFilesByDate"])
                 files=sorted(glob.glob(fileObject["path"]), key=os.path.getmtime) if sortFilesByDate else glob.glob(fileObject["path"])
@@ -83,12 +97,18 @@ def main():
                                 print(line)
                     if processFileScript:
                         subprocess.call([processFileScript, dest, fileObject["label"]])
-            processFilesFolderScript=config["collector"]["processFilesFolderScript"] if "processFilesFolderScript" in config["collector"] else None
+                    if fluentEventProcessor:
+                        fluentEventProcessor.process(fileObject["label"], os.path.abspath(file), dest)
+                    deleteProcessedTempFilesOneByOne=__get_bool_key("deleteProcessedTempFilesOneByOne", config["collector"])
+                    if deleteProcessedTempFilesOneByOne:
+                        os.remove(dest)
+                    
+            processFilesFolderScript=__get_str_key("processFilesFolderScript", config["collector"])
             if processFilesFolderScript:
                 subprocess.call([processFilesFolderScript, tmp_folder])
             
-            skip_compress="compress" in config["collector"] and not bool(config["collector"]["compress"])
-            keep_processed_files="deleteProcessedTemplateFiles" in config["collector"] and not bool(config["collector"]["deleteProcessedTemplateFiles"])
+            skip_compress=not __get_bool_key("compress", config["collector"], True)
+            keep_processed_files=not __get_bool_key("deleteProcessedTempFiles", config["collector"], True)
             if skip_compress:
                 print("skipping file compression")
             else:
@@ -110,6 +130,8 @@ def main():
             
             if not skip_compress and outputScript:
                 subprocess.call([outputScript, "%s.%s" % (output_file, extension)])
+            if fluentEventProcessor:
+                fluentEventProcessor.close()
 
 def make_archive(source, destination, format, extension):
     name = os.path.basename(destination)
@@ -117,6 +139,21 @@ def make_archive(source, destination, format, extension):
     archive_to = os.path.basename(source.strip(os.sep))
     shutil.make_archive(name, format, archive_from, archive_to)
     shutil.move("%s.%s" % (name, extension), "%s.%s" % (destination, extension))
+
+def __get_str_key(key, map, default=None):
+    if default:
+        return map[key] if key in map else str(default)
+    else:
+        return map[key] if key in map else None
+
+def __get_int_key(key, map, default=None):
+    if default:
+        return int(map[key]) if key in map else int(default)
+    else:
+        return map[key] if key in map else None
+
+def __get_bool_key(key, map, default=False):
+    return bool(map[key]) if key in map else bool(default)
 
 if __name__ == "__main__":
     pidfile=os.environ.get('FILECOLLECTOR_PIDFILE', 'filecollector-collector.pid')

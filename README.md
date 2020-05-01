@@ -11,6 +11,7 @@ Service for collecting and processing files (with hooks)
 - anonymization
 - run custom scripts on output file / processed files
 - start/stop simple fileserver (at collect output location)
+- stream collected files to fluentd (line by line)
 
 ## Requirements
 
@@ -45,7 +46,7 @@ filecollector server start --config filecollector.yaml -p /my/pid/dir
 
 ### Configration
 
-### Configuration example
+### Simple configuration example
 
 ```yaml
 server:
@@ -65,6 +66,58 @@ collector:
     processFilesFolderScript: example/scripts/tmp_folder.sh
     deleteProcessedTemplateFiles: true
     outputLocation: "example/files"
+```
+
+Running simple example:
+
+```bash
+# start collector 
+filecollector collector start --config example/filecollector.yaml -p /my/pid/dir
+# start server for browsing
+filecollector server start --config example/filecollector.yaml -p /my/pid/dir
+```
+
+### Fluentd configuration example
+
+```yaml
+collector:
+    files:
+    - path: "example/example*.txt"
+      label: "txt"
+    rules:
+    - pattern:  \d{4}[^\w]\d{4}[^\w]\d{4}[^\w]\d{4}
+      replacement: "[REDACTED]"
+    compress: false
+    useFullPath: true
+    deleteProcessedTempFilesOneByOne: true
+    outputLocation: "example/files"
+    processor:
+      host: "localhost"
+      port: 24224
+      tag: example
+```
+
+Fluentd configuration:
+
+```
+<source>
+  @type forward
+  port 24224
+  bind 0.0.0.0
+</source>
+
+<match example.**>
+   @type stdout
+</match>
+```
+
+Running fluentd example:
+
+```bash
+# start fluentd 
+fluentd --config example/fluentd.conf
+# start collector 
+filecollector collector start --config example/fluentd-filecollector.yaml -p /my/pid/dir
 ```
 
 ### Configuration options
@@ -117,13 +170,45 @@ Script that runs agains 1 processed file. It gets the filename and the label for
 
 Script that runs once after the files are collected. It gets the folder name (where the files are processed) as an input.
 
+#### `collector.preProcessScript`
+
+Script that runs before the files are collected. It gets the folder name (where the files are processed) as an input.
+
 #### `collector.outputScript`
 
 Script that runs once with the compressed output file name as an input.
 
-#### `collector.deleteProcessedTemplateFiles`
+#### `collector.deleteProcessedTempFiles`
 
 After collection of the files + compression, the collected files are deleted. Can be useful to disable this behaviour `compress` option is disabled. Default value is `true`.
+
+#### `collector.deleteProcessedTempFilesOneByOne`
+
+If this option is set, files are deleted right after processed (one at a time). That can be useful if compression is disabled, and you would like to stream large files to fluentd. Default value is `false`.
+
+#### `collector.fluentProcessor`
+
+Fluentd related section for processing files line by line - streaming data by fluentd forward protocol.
+
+#### `collector.fluentProcessor.host`
+
+Fluentd host (for forward protocol). Default value: `localhost`.
+
+#### `collector.fluentProcessor.port`
+
+Fluentd port (for forward protocol). Default value: `24224`.
+
+#### `collector.fluentProcessor.tag`
+
+Fluentd tag for streaming lines. The generated tag for forward protocol is `<collector.fluentProcessor.tag>.<file label for monitored file>`.
+
+#### `collector.fluentProcessor.messageField`
+
+The processed lines are mapped for this field before data has been sent to Fluentd. Default value: `message`.
+
+#### `collector.fluentProcessor.includeTime`
+
+If this is enabled, current time is included in the fluentd data event. (as `time` field). Default value: `false`.
 
 ## Contributing
 
