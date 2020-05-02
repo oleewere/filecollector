@@ -29,6 +29,7 @@ function print_help() {
    Arguments:
      -c, --config  <CONFIG>                 filecollector configuration (in yaml format)
      -e, --python-executable                python executable location, default: python (can be python3, python2.7 /usr/bin/python etc.)
+     -f, --foreground                       run filecollector in foreground
      -p, --pid-dir                          pidfile directory location, default: /var/run
      -l, --log-dir                          out/err logfile location
      -h, --help                             print help
@@ -70,6 +71,10 @@ function run_app() {
           local FILECOLLECTOR_PYTHON_PATH="$2"
           shift 2
         ;;
+         -f|--foreground)
+          local FILECOLLECTOR_FOREGROUND="true"
+          shift 1
+        ;;
         -p|--pid-dir)
           local FILECOLLECTOR_PID_DIR="$2"
           shift 2
@@ -96,12 +101,10 @@ function run_app() {
     exit 1
   fi
 
-  if [[ -z "$FILECOLLECTOR_PYTHON_PATH" ]] ; then
-    FILECOLLECTOR_PYTHON_PATH="python"
-  fi
-
   if [[ -z "$FILECOLLECTOR_PID_DIR" ]] ; then
     FILECOLLECTOR_PID_DIR="/var/run"
+  fi
+  if [[ "$FILECOLLECTOR_COMPONENT" == "server" ]]; then
   fi
 
   if [[ "$FILECOLLECTOR_COMPONENT" == "server" ]]; then
@@ -141,7 +144,11 @@ function run_python_app() {
           echo "Filecollector component '${FILECOLLECTOR_COMPONENT}' already running."
         else
           export FILECOLLECTOR_PIDFILE="$2"
-          nohup $command_to_run >/dev/null 2>&1 &
+          if [[ "$FILECOLLECTOR_FOREGROUND" == "true" ]] ; then
+            $command_to_run
+          else
+            nohup $command_to_run > "$FILECOLLECTOR_LOG_OUT" 2> "$FILECOLLECTOR_LOG_ERR" &
+          fi
         fi
       else
         if [[ "$process_exists" == "0" ]]; then
@@ -156,7 +163,11 @@ function run_python_app() {
         echo "Stopping Filecollector component '${FILECOLLECTOR_COMPONENT}' already stopped."
       else
         export FILECOLLECTOR_PIDFILE="$2"
-        nohup $command_to_run > "$FILECOLLECTOR_LOG_OUT" 2> "$FILECOLLECTOR_LOG_ERR" &
+        if [[ "$FILECOLLECTOR_FOREGROUND" == "true" ]] ; then
+          $command_to_run
+        else
+          nohup $command_to_run > "$FILECOLLECTOR_LOG_OUT" 2> "$FILECOLLECTOR_LOG_ERR" &
+        fi
       fi
     fi
 }
