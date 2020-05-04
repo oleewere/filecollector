@@ -17,7 +17,7 @@ jobs:
         python -m pip install --upgrade pip
         python setup.py sdist
         pip install dist/filecollector-*.tar.gz
-        pip install flake8 pytest
+        pip install flake8 pytest mock
     - name: Lint with flake8
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
