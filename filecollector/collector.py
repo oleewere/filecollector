@@ -33,19 +33,21 @@ import re
 import zipfile
 import subprocess
 import socket
+import time
+from fluent import sender
+from fluent import event
 from pid import PidFile
-from fluent_event_processor import EventProcessor
 
-def parse_args():
+def parse_args(args):
     parser = argparse.ArgumentParser(
         description='Python script to collect logs to specific folder')
     parser.add_argument('--config', type=str, required=True,
                         help='Path to logcollector configuration')
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     return args
 
-def main():
-    args = parse_args()
+def main(args):
+    args = parse_args(args)
     with open(args.config) as file:
         config = yaml.load(file, yaml.SafeLoader)
         if "collector" in config:
@@ -155,7 +157,32 @@ def __get_int_key(key, map, default=None):
 def __get_bool_key(key, map, default=False):
     return bool(map[key]) if key in map else bool(default)
 
+class EventProcessor:
+    
+    def __init__(self, host, port, base_tag, identifier, message_field="message", include_time=False):
+        self.host = host
+        self.port = port
+        self.base_tag = base_tag
+        self.identifier = identifier
+        self.message_field = message_field
+        self.include_time = include_time
+        if host and port:
+            self.fluentSender = sender.FluentSender(base_tag, host=host, port=port)
+        else:
+            self.fluentSender = sender.FluentSender(base_tag)
+
+    def process(self, name, path, real_path):
+        with open(real_path, 'r', buffering=100000) as infile:
+            for line in infile:
+                if self.include_time:
+                    self.fluentSender.emit_with_time(name, time.time(), {self.message_field: line})
+                else:
+                    self.fluentSender.emit(name, {self.message_field: line})
+
+    def close(self):
+        self.fluentSender.close()
+
 if __name__ == "__main__":
     pidfile=os.environ.get('FILECOLLECTOR_PIDFILE', 'filecollector-collector.pid')
     with PidFile(pidfile) as p:
-        main()
+        main(sys.argv[1:])
