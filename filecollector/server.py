@@ -24,19 +24,19 @@ import os
 import yaml
 from pid import PidFile
 
-def parse_args():
+def parse_args(args):
     parser = argparse.ArgumentParser(
         description='Python script to serve simple file server for collected logs')
     parser.add_argument('--config', type=str, required=True,
                         help='Path to logcollector configuration')
-    args = parser.parse_args()
+    args = parser.parse_args(args)
     return args
 
-def main():
-    args = parse_args()
+def main(args):
+    args = parse_args(args)
     with open(args.config) as file:
         config = yaml.load(file, yaml.SafeLoader)
-        if "server" in config:
+        if config and "server" in config:
             port = int(config["server"]["port"])
             folder = str(config["server"]["folder"])
             if folder:
@@ -60,4 +60,4 @@ def main():
 if __name__ == "__main__":
     pidfile=os.environ.get('FILECOLLECTOR_PIDFILE', 'filecollector-server.pid')
     with PidFile(pidfile) as p:
-        main()
+        main(sys.argv[1:])

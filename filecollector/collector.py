@@ -50,7 +50,7 @@ def main(args):
     args = parse_args(args)
     with open(args.config) as file:
         config = yaml.load(file, yaml.SafeLoader)
-        if "collector" in config:
+        if config and "collector" in config:
             outputLocation=config["collector"]["outputLocation"]
             outputScript=__get_str_key("outputScript", config["collector"])
             preProcessScript=__get_str_key("preProcessScript", config["collector"])
