@@ -91,7 +91,7 @@ collector:
     useFullPath: true
     deleteProcessedTempFilesOneByOne: true
     outputLocation: "example/files"
-    processor:
+    fluentProcessor:
       host: "localhost"
       port: 24224
       tag: example
