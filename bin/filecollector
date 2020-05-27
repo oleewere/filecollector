@@ -104,7 +104,8 @@ function run_app() {
   if [[ -z "$FILECOLLECTOR_PID_DIR" ]] ; then
     FILECOLLECTOR_PID_DIR="/var/run"
   fi
-  if [[ "$FILECOLLECTOR_COMPONENT" == "server" ]]; then
+  if [[ -z "$FILECOLLECTOR_PYTHON_PATH" ]] ; then	
+    FILECOLLECTOR_PYTHON_PATH="python"	
   fi
 
   if [[ "$FILECOLLECTOR_COMPONENT" == "server" ]]; then
