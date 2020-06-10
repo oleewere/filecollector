@@ -131,7 +131,11 @@ def main(args):
                 shutil.rmtree(os.path.join(outputLocation, "tmp"))
             
             if not skip_compress and outputScript:
-                subprocess.call([outputScript, "%s.%s" % (output_file, extension)])
+                output_compressed_file="%s.%s" % (output_file, extension)
+                subprocess.call([outputScript, output_compressed_file])
+                deleteCompressedFile=__get_bool_key("deleteCompressedFile", config["collector"])
+                if deleteCompressedFile:
+                   os.remove(output_compressed_file)
             if fluentEventProcessor:
                 fluentEventProcessor.close()
 
