@@ -15,7 +15,7 @@ collector:
     processFilesFolderScript: example/scripts/tmp_folder.sh
     deleteProcessedTemplateFiles: true
     outputLocation: "example/files"
-    processor:
+    fluentProcessor:
       host:  localhost
       port:  24225
       tag: example
