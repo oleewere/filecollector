@@ -96,8 +96,9 @@ def main(args):
                     else:
                         dest_folder=os.path.join(tmp_folder, fileObject["label"].lower())
                     dest_folder=os.path.join(tmp_folder, fileObject["label"])
-                    dest=os.path.join(dest_folder, os.path.abspath(file).lstrip(os.sep)) if useFullPath else os.path.join(dest_folder, os.path.basename(file))
-                    dest_parent=os.path.dirname(dest) 
+                    useFullPathPerFile=__get_bool_key("useFullPath", fileObject, True) if "useFullPath" in fileObject else useFullPath
+                    dest=os.path.join(dest_folder, os.path.abspath(file).lstrip(os.sep)) if useFullPathPerFile else os.path.join(dest_folder, os.path.basename(file))
+                    dest_parent=os.path.dirname(dest)
                     if not os.path.exists(dest_parent):
                         os.makedirs(dest_parent)
                     if os.path.isfile(file):
