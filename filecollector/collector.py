@@ -85,6 +85,11 @@ def main(args):
                 for file in files:
                     if not os.path.exists(tmp_folder):
                         os.makedirs(tmp_folder)
+                    dest_folder=None
+                    if "folderPrefix" in fileObject:
+                        dest_folder=os.path.join(tmp_folder, fileObject["folderPrefix"], fileObject["label"].lower())
+                    else:
+                        dest_folder=os.path.join(tmp_folder, fileObject["label"].lower())
                     dest_folder=os.path.join(tmp_folder, fileObject["label"])
                     dest=os.path.join(dest_folder, os.path.abspath(file).lstrip(os.sep)) if useFullPath else os.path.join(dest_folder, os.path.basename(file))
                     dest_parent=os.path.dirname(dest) 
