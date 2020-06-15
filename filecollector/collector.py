@@ -82,14 +82,14 @@ def main(args):
                 message_field=__get_str_key("messageField", config["collector"]["fluentProcessor"], "message")
                 include_time=__get_bool_key("includeTime", config["collector"]["fluentProcessor"])
                 fluentEventProcessor=EventProcessor(fluent_host, int(fluent_port), fluent_tag, identifier, message_field, include_time)
+            if not os.path.exists(tmp_folder):
+                os.makedirs(tmp_folder)
             for fileObject in files:
                 if filteredLabels and fileObject["label"] not in filteredLabels:
                     continue
                 sortFilesByDate=not "sortFilesByDate" in config["collector"] or bool(config["collector"]["sortFilesByDate"])
                 files=sorted(glob.glob(fileObject["path"]), key=os.path.getmtime) if sortFilesByDate else glob.glob(fileObject["path"])
                 for file in files:
-                    if not os.path.exists(tmp_folder):
-                        os.makedirs(tmp_folder)
                     dest_folder=None
                     if "folderPrefix" in fileObject:
                         dest_folder=os.path.join(tmp_folder, fileObject["folderPrefix"], fileObject["label"].lower())
