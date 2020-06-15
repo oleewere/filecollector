@@ -32,7 +32,7 @@ def readme():
 
 setup(
     name="filecollector",
-    version="0.1.1",
+    version="0.1.2",
     author="Oliver Szabo",
     author_email="oleewere@gmail.com",
     description="Simple file collector - compress/serve/send/anonymizie files",
