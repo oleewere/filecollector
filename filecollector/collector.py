@@ -43,11 +43,14 @@ def parse_args(args):
         description='Python script to collect logs to specific folder')
     parser.add_argument('--config', type=str, required=True,
                         help='Path to logcollector configuration')
+    parser.add_argument('--labels', type=str, required=False,
+                        help='Comma separated list of labels for filtering files for collection')
     args = parser.parse_args(args)
     return args
 
 def main(args):
     args = parse_args(args)
+    filteredLabels = args.labels.split(',') if args.labels else []
     with open(args.config) as file:
         config = yaml.load(file, yaml.SafeLoader)
         if config and "collector" in config:
@@ -80,6 +83,8 @@ def main(args):
                 include_time=__get_bool_key("includeTime", config["collector"]["fluentProcessor"])
                 fluentEventProcessor=EventProcessor(fluent_host, int(fluent_port), fluent_tag, identifier, message_field, include_time)
             for fileObject in files:
+                if filteredLabels and fileObject["label"] not in filteredLabels:
+                    continue
                 sortFilesByDate=not "sortFilesByDate" in config["collector"] or bool(config["collector"]["sortFilesByDate"])
                 files=sorted(glob.glob(fileObject["path"]), key=os.path.getmtime) if sortFilesByDate else glob.glob(fileObject["path"])
                 for file in files:
