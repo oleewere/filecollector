@@ -19,3 +19,5 @@ collector:
       host:  localhost
       port:  24225
       tag: example
+    logger:
+      level: DEBUG

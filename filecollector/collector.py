@@ -21,6 +21,7 @@
 
 import argparse
 import sys
+import logging
 import os
 import yaml
 import glob
@@ -54,6 +55,7 @@ def main(args):
     with open(args.config) as file:
         config = yaml.load(file, yaml.SafeLoader)
         if config and "collector" in config:
+            logger=__setup_logger(config)
             outputLocation=config["collector"]["outputLocation"]
             outputScript=__get_str_key("outputScript", config["collector"])
             preProcessScript=__get_str_key("preProcessScript", config["collector"])
@@ -171,6 +173,22 @@ def __get_int_key(key, map, default=None):
 
 def __get_bool_key(key, map, default=False):
     return bool(map[key]) if key in map else bool(default)
+
+def __setup_logger(config):
+    logger = logging.getLogger('filecollector')
+    consoleHandler = logging.StreamHandler(sys.stdout)
+    logger.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(message)s')
+    if "logger" in config["collector"]:
+        logger.setLevel(__get_str_key("level", config["collector"]["logger"], "INFO"))
+        formatter = logging.Formatter(__get_str_key("format", config["collector"]["logger"], "%(message)s"))
+        if "file" in config["collector"]["logger"] and config["collector"]["logger"]["file"]:
+            fileHandler = logging.RotatingFileHandler(config["collector"]["logger"]["file"], maxBytes=(1048576*5), backupCount=5)
+            fileHandler.setFormatter(formatter)
+            logger.addHandler(fileHandler)
+    consoleHandler.setFormatter(formatter)
+    logger.addHandler(consoleHandler)
+    return logger
 
 class EventProcessor:
     
