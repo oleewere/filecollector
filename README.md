@@ -78,6 +78,13 @@ filecollector collector start --config example/filecollector.yaml -p /my/pid/dir
 filecollector server start --config example/filecollector.yaml -p /my/pid/dir
 ```
 
+Running with docker: 
+
+```bash
+# collector only
+docker run --rm -v /my/path/to/config:/my/path/to/config oleewere/filecollector:latest --config /my/path/to/config/filecollector.yaml
+```
+
 ### Fluentd configuration example
 
 ```yaml
@@ -141,7 +148,27 @@ The collector block, it contains configurations related with the filecollector c
 
 #### `collector.files`
 
-List of files (with `name` and `label`) that needs to be collected. The `name` options can be used as wildcards.
+List of files (with `path` and `label` fields are required) that needs to be collected.
+
+#### `collector.files.path`
+
+Filename or wildcard that represents the files that is needed to be collected.
+
+#### `collector.files.label`
+
+It will be used as a first level folder inside `outputLocation` for the file collection. E.g. if this value is `mylabel`, the output will go into `<outputLocation>/mylabel`
+
+#### `collector.files.folderPrefix`
+
+If it's set, the filecollector will put the files into this folder (inside `outputLocation`, but before `label`)
+
+#### `collector.files.useFullPath`
+
+Use full path for processed files (inside `outputLocation`). Can be useful if because of the wildcard patterns, the base file name are the same for different files from different folders. It overrides the `collector.useFullPath` option.
+
+#### `collector.files.excludes`
+ The `path` options can be used as wildcards.
+There are other options like: `useFullPath` or `excludes`. The `useFullPath` option is the same as the below one, but it overrides the global behavior (default: false). The `excludes` option is a list of path patterns that should be excluded from `path` pattern matches.
 
 #### `collector.rules`
 
@@ -149,7 +176,7 @@ List of anonymization rules that can be run against the file inputs. (`pattern` 
 
 #### `collector.compress`
 
-At the end of the filecollection, the output folder is compressed. The default value is `true`.
+At the end of the filecollection, the output folder is compressed. Default value is `true`.
 
 #### `collector.compressFormat`
 
@@ -162,6 +189,14 @@ Output location (directory), where the processed file(s) will be stored.
 #### `collector.useFullPath`
 
 Use full path for processed files (inside `outputLocation`). Can be useful if because of the wildcard patterns, the base file name are the same for different files from different folders. Default value is `true`.
+
+#### `collector.checkDiskSpace`
+
+IF this option is set, before file processing - based on the file size and `requiredDiskSpaceRatio` option - it will check you have enough space for copying those files into your working directory or not. Default value is `true`.
+
+#### `collector.requiredDiskSpaceRatio`
+
+This value is used for `checkDiskSpace` option. The required disk space will be calculated with this value (as a multiplier, e.g. if my files full size is 100MB and this setting is 1.6, the processing will require 160MB free space). Default value is `1.0`.
 
 #### `collector.processFileScript`
 
@@ -214,6 +249,22 @@ The processed lines are mapped for this field before data has been sent to Fluen
 #### `collector.fluentProcessor.includeTime`
 
 If this is enabled, current time is included in the fluentd data event. (as `time` field). Default value: `false`.
+
+#### `collector.logger`
+
+Logger related configurations for the collector.
+
+#### `collector.logger.level`
+
+Logger level that is used during logging.
+
+#### `collector.logger.format`
+
+Format of the log events. Default value is `%(message)s`.
+
+#### `collector.logger.file`
+
+File where the log will write the logging events, if it is not set, only stdout will be used.
 
 ## Contributing
 
