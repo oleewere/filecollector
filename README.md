@@ -2,6 +2,8 @@
 
 ![build](https://github.com/oleewere/filecollector/workflows/build/badge.svg)
 [![PyPI version](https://badge.fury.io/py/filecollector.svg)](https://badge.fury.io/py/filecollector)
+[![Docker Pulls](https://img.shields.io/docker/pulls/oleewere/filecollector.svg)](https://hub.docker.com/r/oleewere/filecollector/)
+[![](https://images.microbadger.com/badges/image/oleewere/filecollector.svg)](https://microbadger.com/images/oleewere/filecollector "")
 
 Service for collecting and processing files (with hooks)
 
