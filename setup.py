@@ -45,9 +45,8 @@ setup(
     license='Apache 2.0',
     classifiers=[
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
     ],
-    python_requires='>=2.7',
+    python_requires='>=3.5',
 )

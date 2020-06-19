@@ -16,7 +16,7 @@ Service for collecting and processing files (with hooks)
 
 ## Requirements
 
-- python 2.7+ / python 3.5+
+- python 3.5+
 - pip
 
 ## Installation

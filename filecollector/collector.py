@@ -224,12 +224,7 @@ def __disk_check(files, filteredLabels, outputLocation, config, logger):
                 fullSize = fullSize + os.stat(file).st_size
         freeSpace=0
         requiredFreeSpace=0
-        try:
-            total, used, freeSpace = shutil.disk_usage(outputLocation)
-        except Exception as e:
-            import psutil
-            hdd = psutil.disk_usage(outputLocation)
-            freeSpace=hdd.free
+        total, used, freeSpace = shutil.disk_usage(outputLocation)
         requiredFreeSpace=int(fullSize * requiredDiskSpaceRatio)
         if fullSize > freeSpace:
             logger.error("there is not enough free space for file collection - free space: %d, required space: %d" % (freeSpace, requiredFreeSpace))
