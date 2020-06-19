@@ -224,7 +224,6 @@ def __disk_check(files, filteredLabels, outputLocation, config, logger):
             sys.exit(1)
         else:
             logger.debug("free disk space: %d, required disk space: %d" % (freeSpace, requiredFreeSpace))
-
     else:
         logger.debug("disk space check is disabled")
 
@@ -244,6 +243,9 @@ class EventProcessor:
 
     def process(self, name, path, real_path):
         with open(real_path, 'r', buffering=100000) as infile:
+            if "*" in name:
+                replaced_path=path.replace(os.sep, ".")
+                name=name.replace("*", replaced_path)
             for line in infile:
                 if self.include_time:
                     self.fluentSender.emit_with_time(name, time.time(), {self.message_field: line})
