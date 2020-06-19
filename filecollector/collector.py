@@ -92,7 +92,10 @@ def main(args):
                     continue
                 sortFilesByDate=not "sortFilesByDate" in config["collector"] or bool(config["collector"]["sortFilesByDate"])
                 allfiles=sorted(glob.glob(fileObject["path"]), key=os.path.getmtime) if sortFilesByDate else glob.glob(fileObject["path"])
+                exclude_files=__get_excludes(fileObject["excludes"] if "excludes" in fileObject else [], logger)
                 for file in allfiles:
+                    if file in exclude_files:
+                        continue
                     logger.debug("process file: %s" % os.path.abspath(file))
                     dest_folder=None
                     if "folderPrefix" in fileObject:
@@ -197,6 +200,15 @@ def __setup_logger(config):
     consoleHandler.setFormatter(formatter)
     logger.addHandler(consoleHandler)
     return logger
+
+def __get_excludes(paths, logger):
+    exclude_files=[]
+    for filepath in paths:
+        files=glob.glob(filepath)
+        for file in files:
+            exclude_files.append(file)
+            logger.debug("file %s will be excluded from processing." % file)
+    return exclude_files
 
 def __disk_check(files, filteredLabels, outputLocation, config, logger):
     checkDiskSpace=__get_bool_key("checkDiskSpace", config, True)
