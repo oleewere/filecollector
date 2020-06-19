@@ -15,6 +15,7 @@ collector:
     processFilesFolderScript: example/scripts/tmp_folder.sh
     deleteProcessedTemplateFiles: true
     outputLocation: "example/files"
+    requiredDiskSpaceRatio: 1.7
     fluentProcessor:
       host:  localhost
       port:  24225

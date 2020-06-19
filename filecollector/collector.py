@@ -86,12 +86,13 @@ def main(args):
                 fluentEventProcessor=EventProcessor(fluent_host, int(fluent_port), fluent_tag, identifier, message_field, include_time)
             if not os.path.exists(tmp_folder):
                 os.makedirs(tmp_folder)
+            __disk_check(files, filteredLabels, outputLocation, config["collector"], logger)
             for fileObject in files:
                 if filteredLabels and fileObject["label"] not in filteredLabels:
                     continue
                 sortFilesByDate=not "sortFilesByDate" in config["collector"] or bool(config["collector"]["sortFilesByDate"])
-                files=sorted(glob.glob(fileObject["path"]), key=os.path.getmtime) if sortFilesByDate else glob.glob(fileObject["path"])
-                for file in files:
+                allfiles=sorted(glob.glob(fileObject["path"]), key=os.path.getmtime) if sortFilesByDate else glob.glob(fileObject["path"])
+                for file in allfiles:
                     dest_folder=None
                     if "folderPrefix" in fileObject:
                         dest_folder=os.path.join(tmp_folder, fileObject["folderPrefix"], fileObject["label"].lower())
@@ -171,6 +172,12 @@ def __get_int_key(key, map, default=None):
     else:
         return map[key] if key in map else None
 
+def __get_float_key(key, map, default=None):
+    if default:
+        return float(map[key]) if key in map else float(default)
+    else:
+        return map[key] if key in map else None
+
 def __get_bool_key(key, map, default=False):
     return bool(map[key]) if key in map else bool(default)
 
@@ -189,6 +196,36 @@ def __setup_logger(config):
     consoleHandler.setFormatter(formatter)
     logger.addHandler(consoleHandler)
     return logger
+
+def __disk_check(files, filteredLabels, outputLocation, config, logger):
+    checkDiskSpace=__get_bool_key("checkDiskSpace", config, True)
+    requiredDiskSpaceRatio=__get_float_key("requiredDiskSpaceRatio", config, 1.0)
+    if checkDiskSpace:
+        logger.debug("disk space check is enabled")
+        fullSize=0
+        for fileObject in files:
+            if filteredLabels and fileObject["label"] not in filteredLabels:
+                continue
+            filePaths=glob.glob(fileObject["path"])
+            for file in filePaths:
+                fullSize = fullSize + os.stat(file).st_size
+        freeSpace=0
+        requiredFreeSpace=0
+        try:
+            total, used, freeSpace = shutil.disk_usage(outputLocation)
+        except Exception as e:
+            import psutil
+            hdd = psutil.disk_usage(outputLocation)
+            freeSpace=hdd.free
+        requiredFreeSpace=int(fullSize * requiredDiskSpaceRatio)
+        if fullSize > freeSpace:
+            logger.error("there is not enough free space for file collection - free space: %d, required space: %d" % (freeSpace, requiredFreeSpace))
+            sys.exit(1)
+        else:
+            logger.debug("free disk space: %d, required disk space: %d" % (freeSpace, requiredFreeSpace))
+
+    else:
+        logger.debug("disk space check is disabled")
 
 class EventProcessor:
     

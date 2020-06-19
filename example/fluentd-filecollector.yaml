@@ -9,6 +9,7 @@ collector:
     useFullPath: true
     deleteProcessedTempFilesOneByOne: true
     outputLocation: "example/files"
+    checkDiskSpace: false
     fluentProcessor:
       host: "localhost"
       port: 24225
