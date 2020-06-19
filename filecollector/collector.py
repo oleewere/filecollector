@@ -93,6 +93,7 @@ def main(args):
                 sortFilesByDate=not "sortFilesByDate" in config["collector"] or bool(config["collector"]["sortFilesByDate"])
                 allfiles=sorted(glob.glob(fileObject["path"]), key=os.path.getmtime) if sortFilesByDate else glob.glob(fileObject["path"])
                 for file in allfiles:
+                    logger.debug("process file: %s" % os.path.abspath(file))
                     dest_folder=None
                     if "folderPrefix" in fileObject:
                         dest_folder=os.path.join(tmp_folder, fileObject["folderPrefix"], fileObject["label"].lower())
