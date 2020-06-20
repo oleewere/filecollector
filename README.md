@@ -214,7 +214,7 @@ Script that runs before the files are collected. It gets the folder name (where 
 
 Script that runs once with the compressed output file name as an input.
 
-#### 'collector.deleteCompressedFile'
+#### `collector.deleteCompressedFile`
 
 Delete compressed file at the end of the file collection. That can be useful e.g. if an output script upload the compressed file somewhere adn it is needed to do a cleanup. Default value is `false`.
 
