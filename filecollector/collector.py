@@ -50,7 +50,7 @@ def parse_args(args):
     parser.add_argument('--start-time', type=float, required=False, dest="start_time",
                         help='Start (last modified) datestamp (epoh unix format) for the monitored logs')
     parser.add_argument('--end-time', type=float, required=False, dest="end_time",
-                        help='End (creation) datestamp for the monitored logs (epoh unix format)')       
+                        help='End (creation) datestamp (epoh unix format) for the monitored logs (epoh unix format)')       
     args = parser.parse_args(args)
     return args
 
