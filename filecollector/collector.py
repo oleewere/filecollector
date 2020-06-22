@@ -35,6 +35,7 @@ import zipfile
 import subprocess
 import socket
 import time
+import platform
 from fluent import sender
 from fluent import event
 from pid import PidFile
@@ -46,12 +47,18 @@ def parse_args(args):
                         help='Path to logcollector configuration')
     parser.add_argument('--labels', type=str, required=False,
                         help='Comma separated list of labels for filtering files for collection')
+    parser.add_argument('--start-time', type=float, required=False, dest="start_time",
+                        help='Start (last modified) datestamp (epoh unix format) for the monitored logs')
+    parser.add_argument('--end-time', type=float, required=False, dest="end_time",
+                        help='End (creation) datestamp for the monitored logs (epoh unix format)')       
     args = parser.parse_args(args)
     return args
 
 def main(args):
     args = parse_args(args)
     filteredLabels = args.labels.split(',') if args.labels else []
+    startTime=args.start_time
+    endTime=args.end_time
     with open(args.config) as file:
         config = yaml.load(file, yaml.SafeLoader)
         if config and "collector" in config:
@@ -86,7 +93,7 @@ def main(args):
                 fluentEventProcessor=EventProcessor(fluent_host, int(fluent_port), fluent_tag, identifier, message_field, include_time)
             if not os.path.exists(tmp_folder):
                 os.makedirs(tmp_folder)
-            __disk_check(files, filteredLabels, outputLocation, config["collector"], logger)
+            __disk_check(files, filteredLabels, outputLocation, config["collector"], startTime, endTime, logger)
             for fileObject in files:
                 if filteredLabels and fileObject["label"] not in filteredLabels:
                     continue
@@ -94,9 +101,13 @@ def main(args):
                 allfiles=sorted(glob.glob(fileObject["path"]), key=os.path.getmtime) if sortFilesByDate else glob.glob(fileObject["path"])
                 exclude_files=__get_excludes(fileObject["excludes"] if "excludes" in fileObject else [], logger)
                 for file in allfiles:
+                    absFilePath=os.path.abspath(file)
                     if file in exclude_files:
                         continue
-                    logger.debug("process file: %s" % os.path.abspath(file))
+                    if __is_file_not_in_date_rage(absFilePath, startTime, endTime, logger):
+                        continue
+                    
+                    logger.debug("process file: %s" % absFilePath)
                     dest_folder=None
                     if "folderPrefix" in fileObject:
                         dest_folder=os.path.join(tmp_folder, fileObject["folderPrefix"], fileObject["label"].lower())
@@ -210,7 +221,7 @@ def __get_excludes(paths, logger):
             logger.debug("file %s will be excluded from processing." % file)
     return exclude_files
 
-def __disk_check(files, filteredLabels, outputLocation, config, logger):
+def __disk_check(files, filteredLabels, outputLocation, config, startTime, endTime, logger):
     checkDiskSpace=__get_bool_key("checkDiskSpace", config, True)
     requiredDiskSpaceRatio=__get_float_key("requiredDiskSpaceRatio", config, 1.0)
     if checkDiskSpace:
@@ -221,6 +232,8 @@ def __disk_check(files, filteredLabels, outputLocation, config, logger):
                 continue
             filePaths=glob.glob(fileObject["path"])
             for file in filePaths:
+                if __is_file_not_in_date_rage(os.path.abspath(file), startTime, endTime, logger):
+                    continue
                 fullSize = fullSize + os.stat(file).st_size
         freeSpace=0
         requiredFreeSpace=0
@@ -233,6 +246,33 @@ def __disk_check(files, filteredLabels, outputLocation, config, logger):
             logger.debug("free disk space: %d, required disk space: %d" % (freeSpace, requiredFreeSpace))
     else:
         logger.debug("disk space check is disabled")
+
+def __is_file_not_in_date_rage(file_path, start_time, end_time, logger):
+    result=False
+    if start_time or end_time:
+        creationDate=__creation_date(file_path)
+        lastModifiedDate=os.stat(file_path).st_mtime
+        logger.debug("file '%s' creation date: %s." % (file_path, creationDate))
+        logger.debug("file '%s' last modification date: %s." % (file_path, lastModifiedDate))
+        if start_time and lastModifiedDate < start_time:
+            logger.debug("skipping processing file '%s' as last modification time is smaller than 'start-time' parameter" % file_path)
+            result=True
+        elif end_time and end_time < creationDate:
+            logger.debug("skipping processing file '%s' as creation time is larger than 'end-time' parameter" % file_path)
+            result=True
+        else:
+            logger.debug("file '%s' is in the right date range (based on creation/last modification datestamps)" % file_path)
+    return result
+
+def __creation_date(file_path):
+    if platform.system() == 'Windows':
+        return os.path.getctime(file_path)
+    else:
+        stat = os.stat(file_path)
+        try:
+            return stat.st_birthtime
+        except AttributeError:
+            return stat.st_mtime
 
 class EventProcessor:
     
