@@ -30,9 +30,13 @@ def readme():
     with open('README.md') as f:
         return f.read()
 
+def version():
+    with open('VERSION') as f:
+        return f.read()
+
 setup(
     name="filecollector",
-    version="0.2.0",
+    version=version(),
     author="Oliver Szabo",
     author_email="oleewere@gmail.com",
     description="Simple file collector - compress/serve/send/anonymizie files",
