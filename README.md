@@ -170,6 +170,10 @@ Use full path for processed files (inside `outputLocation`). Can be useful if be
  The `path` options can be used as wildcards.
 There are other options like: `useFullPath` or `excludes`. The `useFullPath` option is the same as the below one, but it overrides the global behavior (default: false). The `excludes` option is a list of path patterns that should be excluded from `path` pattern matches.
 
+#### `collector.files.skipLabelFromPath`
+
+If that is set to `true`. In the output location, the processed files are not going to contain thier labels as a prefix. Default value is `false`.
+
 #### `collector.rules`
 
 List of anonymization rules that can be run against the file inputs. (`pattern` field for matching, `replacement` for the replacement on match)

@@ -109,11 +109,14 @@ def main(args):
                     
                     logger.debug("process file: %s" % absFilePath)
                     dest_folder=None
+                    labelInPath=fileObject["label"].lower()
+                    if "skipLabelFromPath" in fileObject and fileObject["skipLabelFromPath"]:
+                        logger.debug("skip label from path")
+                        labelInPath=""
                     if "folderPrefix" in fileObject:
-                        dest_folder=os.path.join(tmp_folder, fileObject["folderPrefix"], fileObject["label"].lower())
+                        dest_folder=os.path.join(tmp_folder, fileObject["folderPrefix"], labelInPath)
                     else:
-                        dest_folder=os.path.join(tmp_folder, fileObject["label"].lower())
-                    dest_folder=os.path.join(tmp_folder, fileObject["label"])
+                        dest_folder=os.path.join(tmp_folder, labelInPath)
                     useFullPathPerFile=__get_bool_key("useFullPath", fileObject, True) if "useFullPath" in fileObject else useFullPath
                     dest=os.path.join(dest_folder, os.path.abspath(file).lstrip(os.sep)) if useFullPathPerFile else os.path.join(dest_folder, os.path.basename(file))
                     dest_parent=os.path.dirname(dest)
