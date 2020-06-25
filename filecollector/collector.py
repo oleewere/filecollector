@@ -125,7 +125,7 @@ def main(args):
                         for line in fileinput.input(dest, inplace=1):
                             for rule in config["collector"]["rules"]:
                                 line = re.sub(rule["pattern"], rule["replacement"], line.rstrip())
-                                print(line)
+                            print(line)
                     if processFileScript:
                         subprocess.call([processFileScript, dest, fileObject["label"]])
                     if fluentEventProcessor:
