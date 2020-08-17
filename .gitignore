@@ -136,3 +136,8 @@ example/files
 *.pid
 *.out
 *.err
+
+
+#Added by cargo
+
+/target

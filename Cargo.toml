@@ -1,0 +1,16 @@
+[package]
+name = "filecollector"
+version = "0.1.0"
+authors = ["Oliver Szabo <oleewere@gmail.com>"]
+edition = "2018"
+
+[lib]
+name = "filecollector"
+crate-type = ["cdylib"]
+
+[dependencies]
+yaml-rust = "0.4"
+
+[dependencies.pyo3]
+version = "0.11.1"
+features = ["extension-module"]
